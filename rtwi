@@ -1,0 +1,53 @@
+#!/usr/bin/ruby
+# -*- coding: utf-8 -*-
+
+require 'rubygems'
+require 'twitter'
+require 'tweetstream'
+require 'rexml/document'
+require 'colored'
+
+require "./auth.rb"
+require "./useradd.rb"
+require "./tweet.rb"
+require "./timeline.rb"
+require "./auth_stream.rb"
+require "./stream.rb"
+require "./search.rb"
+
+load "./config.rb"
+
+ID_REGEXP    = /\w{1,15}/
+ID_REGEXP_AT = /@\w{1,15}/
+
+# 現在有効になっているユーザを表示
+print "Active user : "; puts "@#{ACTIVE_USER}".bold.green
+
+args = ARGV
+timeline = []
+
+begin
+
+  # 引数なしでコマンドラインモード
+  if args.size < 1
+    print "rtwi > "
+    args = STDIN.gets.strip.split
+    break if args[0] =~ /exit/
+  end
+
+  # ツイート
+  tweet(*args.drop(1))                 if args[0] =~ /^(tweet|tw)$/
+  # タイムライン
+  timeline = timeline(args[1],args[2]) if args[0] =~ /^(timeline|tl)$/
+  # ツイート詳細
+  tweet_info(timeline,args[1])         if args[0] =~ /^(tweetinfo|info)$/
+  # ユーザー追加
+  useradd(args[1])                     if args[0] =~ /^useradd$/
+  # ユーザーストリーム
+  stream(args[1])                      if args[0] =~ /^(stream|st)$/
+  # 検索
+  timeline = search(args[1],args[2])   if args[0] =~ /^(search)$/
+
+  args = []                     # 次の入力に備える
+
+end while ARGV[0].nil?          # 引数を渡されて起動した場合は抜ける
